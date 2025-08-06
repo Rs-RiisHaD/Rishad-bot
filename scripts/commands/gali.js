@@ -1,17 +1,10 @@
 const fs = require("fs");
 const path = __dirname + "/gali.json";
 
-// গালি ফাইল না থাকলে তৈরি করবে
-if (!fs.existsSync(path)) fs.writeFileSync(path, JSON.stringify([
-  "তুই গাধা নয়, গাধার বাপ! 🐴",
-  "তোর মগজে RAM থাকলে তুই hang করতে না! 💻",
-  "তুই একটা চলন্ত error! 💥",
-  "calculator তোকে ক্যালকুলেট করতে চায় না! 😂",
-  "debugger তোকে দেখলে pause মারে! ⏸️",
-  "তুই এমন একটা BUG, যারে fix করলে system crash করে! 🔥"
-], null, 2));
-
 function loadGaliList() {
+  if (!fs.existsSync(path)) {
+    fs.writeFileSync(path, JSON.stringify([], null, 2));
+  }
   return JSON.parse(fs.readFileSync(path));
 }
 
@@ -30,15 +23,16 @@ module.exports.config = {
   cooldowns: 5
 };
 
-module.exports.run = async function ({ api, event, args, messageID, threadID, senderID, mentions }) {
+module.exports.run = async function({ api, event, args }) {
+  const { threadID, messageID, senderID, mentions } = event;
+  
+  // Admin check
   const threadInfo = await api.getThreadInfo(threadID);
   const isAdmin = threadInfo.adminIDs.some(admin => admin.id === senderID);
-
   if (!isAdmin) return api.sendMessage("❌ ভাই, permission নাই! শুধু অ্যাডমিন চালাতে পারবে।", threadID, messageID);
-
-  const subcmd = args[0]?.toLowerCase();
-
+  
   const allGalies = loadGaliList();
+  const subcmd = args[0]?.toLowerCase();
 
   if (subcmd === "add") {
     const newGali = args.slice(1).join(" ");
@@ -46,6 +40,7 @@ module.exports.run = async function ({ api, event, args, messageID, threadID, se
 
     allGalies.push(newGali);
     saveGaliList(allGalies);
+
     return api.sendMessage(`✅ নতুন গালি যুক্ত হলো:\n"${newGali}"`, threadID, messageID);
   }
 
@@ -68,7 +63,7 @@ module.exports.run = async function ({ api, event, args, messageID, threadID, se
     return;
   }
 
-  // সাধারন gali @mention
+  // Normal gali @mention
   const mentionedIDs = Object.keys(mentions);
   if (mentionedIDs.length === 0) return api.sendMessage("⚠️ কাউকে @mention করো!", threadID, messageID);
 
