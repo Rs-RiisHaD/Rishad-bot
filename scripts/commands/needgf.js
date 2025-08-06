@@ -18,7 +18,7 @@ function downloadImage(url, filePath) {
       res.pipe(file);
       file.on("finish", () => file.close(resolve));
     }).on("error", err => {
-      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+      fs.unlinkSync(filePath);
       reject(err);
     });
   });
@@ -26,46 +26,36 @@ function downloadImage(url, filePath) {
 
 module.exports.config = {
   name: "needgf",
-  version: "1.0.0",
+  version: "1.0.5",
   hasPermssion: 0,
   credits: "Ullash api rasin",
-  description: "সিঙ্গেলদের শেষ ভরসার ছবি পাঠাবে",
+  description: "সিঙ্গেলদের শেষ ভরসার ফাইল",
   prefix: false,
   commandCategory: "fun",
   usages: "needgf",
   cooldowns: 20,
 };
 
-module.exports.run = async function({ api, event }) {
+module.exports.run = async function ({ api, event }) {
   try {
     const apiUrl = decode(encodedUrl);
     const apiKey = decode(encodedKey);
     const fullUrl = `${apiUrl}?apikey=${apiKey}`;
 
     const res = await axios.get(fullUrl);
-    const title = res.data.data.title || "Here's your GF image!";
+    const title = res.data.data.title;
     const imgUrl = res.data.data.url;
 
-    if (!imgUrl) return api.sendMessage("😔 ছবি পাওয়া যায়নি, পরে আবার চেষ্টা করো।", event.threadID, event.messageID);
-
-    const imgDir = path.join(__dirname, "cache");
-    if (!fs.existsSync(imgDir)) fs.mkdirSync(imgDir);
-
-    const imgPath = path.join(imgDir, `${event.senderID}_gf.jpg`);
+    const imgPath = path.join(__dirname, "cache", `${event.senderID}_gf.jpg`);
     await downloadImage(imgUrl, imgPath);
 
-    api.sendMessage(
-      {
-        body: title,
-        attachment: fs.createReadStream(imgPath)
-      },
-      event.threadID,
-      () => fs.unlinkSync(imgPath),
-      event.messageID
-    );
+    api.sendMessage({
+      body: title,
+      attachment: fs.createReadStream(imgPath)
+    }, event.threadID, () => fs.unlinkSync(imgPath), event.messageID);
 
   } catch (err) {
-    console.error("❌ needgf error:", err.message);
-    api.sendMessage("❌ কিছু সমস্যা হয়েছে, পরে আবার চেষ্টা করো।", event.threadID, event.messageID);
+    console.error("❌ Image fetch error:", err.message);
+    api.sendMessage("দুঃখিত, ছবি আনতে সমস্যা হয়েছে। আবার চেষ্টা করুন।", event.threadID, event.messageID);
   }
 };
