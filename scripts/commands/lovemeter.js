@@ -9,24 +9,27 @@ module.exports.config = {
   cooldowns: 5,
 };
 
-module.exports.run = async function({ api, event }) {
-  try {
-    const { threadID, messageID, mentions } = event;
-    const mentionIDs = Object.keys(mentions);
+module.exports.run = async function ({ api, event }) {
+  const { threadID, messageID, mentions } = event;
 
+  try {
+    const mentionIDs = Object.keys(mentions);
     if (mentionIDs.length < 2) {
       return api.sendMessage(
-        "⚠️ দয়া করে দুইজনকে মেনশন করো, যেমন:\nlovemeter @user1 @user2",
+        "⚠️ দয়া করে দুইজনকে মেনশন করো, যেমন:\n\nlovemeter @user1 @user2",
         threadID,
         messageID
       );
     }
 
-    const name1 = mentions[mentionIDs[0]].replace("@", "");
-    const name2 = mentions[mentionIDs[1]].replace("@", "");
+    // মেনশন থেকে নামগুলো ধরে নিচ্ছি
+    const name1 = mentions[mentionIDs[0]];
+    const name2 = mentions[mentionIDs[1]];
 
+    // র‍্যান্ডম প্রেমের শতাংশ
     const lovePercent = Math.floor(Math.random() * 101);
 
+    // ফলাফল তৈরি
     let result = "";
     if (lovePercent >= 90) {
       result = "💍 বিয়ের তারিখ ঠিক করে ফেলো! একে অপরের জন্যই তৈরি 💖";
@@ -40,10 +43,10 @@ module.exports.run = async function({ api, event }) {
       result = "💔 Friend zone detected... প্রেমে ব্যালেন্স নাই!";
     }
 
-    const msg = `🔮 ভালোবাসা বিশ্লেষণ:\n💑 ${name1} ❤️ ${name2}\n❤️ Matching: ${lovePercent}%\n\n${result}`;
+    const message = `🔮 ভালোবাসা বিশ্লেষণ:\n💑 ${name1} ❤️ ${name2}\n❤️ Matching: ${lovePercent}%\n\n${result}`;
 
-    return api.sendMessage(msg, threadID, messageID);
-  } catch (error) {
-    console.error("lovemeter error:", error);
+    return api.sendMessage(message, threadID, messageID);
+  } catch (err) {
+    console.error("lovemeter error:", err);
   }
 };
